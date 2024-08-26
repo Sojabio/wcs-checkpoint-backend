@@ -1,6 +1,6 @@
-import { Resolver, Query, InputType, Field, Mutation, Arg } from "type-graphql";
+import { Resolver, Query, InputType, Field, Mutation, Arg, ID } from "type-graphql";
 import { Country } from "../entities/country";
-import { Like } from "typeorm";
+import { Continent } from "../entities/continent";
 
 @InputType()
 class NewCountryInput {
@@ -13,45 +13,67 @@ class NewCountryInput {
   @Field()
   emoji: string;
 
-  @Field()
-  continent: string;
+  @Field(() => ID)
+  continentId: number;
 }
 
 @Resolver(Country)
 class CountryResolver {
     @Query(() => [Country])
     async getAllCountries() {
-        const article = await Country.find();
-        return article;
+        const country = await Country.find({ relations: { continent: true }});
+        return country;
     }
 
-    @Query(() => Country)
+    @Query(() => Country, { nullable: true }) 
     async getCountryByCode(@Arg("countryCode") countryCode: string) {
-      try {
-      const country = await Country.findOneByOrFail({ code: countryCode });
-      return country} 
-      catch (err) 
-      {
-        console.log(err)
-        return "error"
-      }
+        try {
+            const country = await Country.findOne({
+                where: { code: countryCode },
+                relations: ["continent"],
+            })
+
+            if (!country) {
+                console.log(`no country with this country code`);
+                return null
+            }
+            return country
+        } catch (error) {
+            console.error( error);
+            throw new Error("Failed to fetch country");
+        }
     }
 
     @Query(() => [Country])
-    async getCountriesByContinent(@Arg("continent") continent: string) {
+      async getCountriesByContinent(@Arg("continentId") continentId: number){
       const countries = await Country.find({
-        where: [{ continent: Like(`${continent}`) }],
-      });
-      return countries;
-    }
-    
+      where: { continent: { id: continentId } },
+      relations: { continent: true }
+    })
+
+    return countries
+  }
 
     @Mutation(() => Country)
     async createNewCountry(@Arg("data") newCountryData: NewCountryInput) {
-        const resultFromSave = await Country.save({
-        ...newCountryData,
+      const continent = await Continent.findOne({
+        where: { id: Number(newCountryData.continentId)},
       })
-        return resultFromSave;
+
+      if (!continent) {
+        throw new Error("Continent not found");
+      }
+  
+      const newCountry = Country.create({
+        code: newCountryData.code,
+        name: newCountryData.name,
+        emoji: newCountryData.emoji,
+        continent: continent
+      })
+
+  
+      await newCountry.save();
+      return newCountry
     }
 
 

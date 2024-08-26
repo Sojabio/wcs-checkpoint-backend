@@ -3,8 +3,10 @@ import {
     BaseEntity,
     Column,
     Entity,
+    ManyToOne,
     PrimaryGeneratedColumn
   } from "typeorm";
+import { Continent } from "./continent";
  
  @ObjectType()
   @Entity()
@@ -25,8 +27,7 @@ import {
     @Column()
     emoji: string;
 
-    @Field()
-    @Column()
-    continent: string;
-    
+    @Field(() => Continent) 
+    @ManyToOne(() => Continent, (continent) => continent.countries, { nullable: true})
+    continent: Continent;
 }
