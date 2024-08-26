@@ -1,5 +1,6 @@
 import { Resolver, Query, InputType, Field, Mutation, Arg } from "type-graphql";
 import { Country } from "../entities/country";
+import { Like } from "typeorm";
 
 @InputType()
 class NewCountryInput {
@@ -11,6 +12,9 @@ class NewCountryInput {
 
   @Field()
   emoji: string;
+
+  @Field()
+  continent: string;
 }
 
 @Resolver(Country)
@@ -32,6 +36,15 @@ class CountryResolver {
         return "error"
       }
     }
+
+    @Query(() => [Country])
+    async getCountriesByContinent(@Arg("continent") continent: string) {
+      const countries = await Country.find({
+        where: [{ continent: Like(`${continent}`) }],
+      });
+      return countries;
+    }
+    
 
     @Mutation(() => Country)
     async createNewCountry(@Arg("data") newCountryData: NewCountryInput) {

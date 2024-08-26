@@ -24,5 +24,9 @@ import {
     @Field()
     @Column()
     emoji: string;
+
+    @Field()
+    @Column()
+    continent: string;
     
 }
