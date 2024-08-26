@@ -27,7 +27,7 @@ import { Continent } from "./continent";
     @Column()
     emoji: string;
 
-    @Field(() => Continent) 
+    @Field(() => Continent, { nullable: true }) 
     @ManyToOne(() => Continent, (continent) => continent.countries, { nullable: true})
-    continent: Continent;
+    continent: Continent | null;
 }

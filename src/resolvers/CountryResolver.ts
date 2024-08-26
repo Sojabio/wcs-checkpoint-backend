@@ -13,8 +13,8 @@ class NewCountryInput {
   @Field()
   emoji: string;
 
-  @Field(() => ID)
-  continentId: number;
+  @Field(() => ID, { nullable: true })
+  continentId?: number;
 }
 
 @Resolver(Country)
@@ -54,29 +54,25 @@ class CountryResolver {
     return countries
   }
 
-    @Mutation(() => Country)
-    async createNewCountry(@Arg("data") newCountryData: NewCountryInput) {
-      const continent = await Continent.findOne({
-        where: { id: Number(newCountryData.continentId)},
-      })
-
-      if (!continent) {
-        throw new Error("Continent not found");
+  @Mutation(() => Country)
+  async createNewCountry(@Arg("data") newCountryData: NewCountryInput) {
+      let continent: Continent | null = null
+      if (newCountryData.continentId) {
+          continent = await Continent.findOne({
+              where: { id: Number(newCountryData.continentId) }
+          });
+          if (!continent) {
+              throw new Error(`continent not found`);
+          }
       }
-  
       const newCountry = Country.create({
-        code: newCountryData.code,
-        name: newCountryData.name,
-        emoji: newCountryData.emoji,
-        continent: continent
-      })
+          ...newCountryData,
+          continent : continent 
+      });
 
-  
       await newCountry.save();
-      return newCountry
-    }
-
-
+      return newCountry;
+  }
 
 }
 
