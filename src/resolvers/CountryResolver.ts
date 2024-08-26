@@ -21,6 +21,18 @@ class CountryResolver {
         return article;
     }
 
+    @Query(() => Country)
+    async getCountryByCode(@Arg("countryCode") countryCode: string) {
+      try {
+      const country = await Country.findOneByOrFail({ code: countryCode });
+      return country} 
+      catch (err) 
+      {
+        console.log(err)
+        return "error"
+      }
+    }
+
     @Mutation(() => Country)
     async createNewCountry(@Arg("data") newCountryData: NewCountryInput) {
         const resultFromSave = await Country.save({
@@ -28,6 +40,8 @@ class CountryResolver {
       })
         return resultFromSave;
     }
+
+
 
 }
 
